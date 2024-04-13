@@ -11,7 +11,7 @@ public class Main {
 	    try {
 	      labirinto.criaLabirinto(FILE_PATH);
 	
-	      labirinto.getLabirinto();
+	      System.out.println(Labirinto.percorreLabirinto());
 	    } catch (IOException e) {
 	      e.printStackTrace();
 	    }
