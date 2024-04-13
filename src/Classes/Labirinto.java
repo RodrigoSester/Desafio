@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.stream.*;
 
 public class Labirinto {
-  public static char[][] labirinto;
+  public static char[][] maze;
   private static char[][] path;
   
   private static int numberOfLines;
@@ -22,10 +22,10 @@ public class Labirinto {
     numberOfLines = arrLines.length;
     linesLength = arrLines[0].toString().length();
     
-    labirinto = new char[numberOfLines][linesLength];
+    maze = new char[numberOfLines][linesLength];
 
     firstLine = arrLines[0].toString();
-    labirinto[0] = firstLine.toCharArray(); 
+    maze[0] = firstLine.toCharArray(); 
     
 	Labirinto.percorreLabirinto(arrLines);
 
@@ -38,7 +38,7 @@ public class Labirinto {
 
 		  for (int j = 0; j < linesLength; j++) {
 			  char letter = line.toString().charAt(j);
-			  labirinto[i][j] = letter;
+			  maze[i][j] = letter;
 		  }
 	  }
   }
@@ -46,7 +46,7 @@ public class Labirinto {
   public void getLabirinto() {
 	  for (int i = 0; i < numberOfLines; i++) {
 		  for (int j = 0; j < linesLength; j++) {
-			  System.out.print(labirinto[i][j]);
+			  System.out.print(maze[i][j]);
 		  }
 		  
 		  System.out.println();
