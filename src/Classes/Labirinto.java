@@ -1,17 +1,29 @@
 package Classes;
 
 import java.io.*;
+import java.util.*;
 import java.util.stream.*;
 
 public class Labirinto {
+  public static boolean passedInAllPositions = false;
+
   public static char[][] maze;
+
+  public static Map<String, Position> movements = Map.of(
+		  "right", new Position(0, 1),
+		  "down", new Position(1, 0),
+		  "up", new Position(-1, 0),
+		  "left", new Position(0, -1)
+		  );
+  
+  public static List<Position> spacePositions = new ArrayList<>();
   
   private static int numberOfLines;
   private static int linesLength;
+  public static int indexTwoPaths;
   
   private static final char WALL = 'X';
   private static final char PATH = ' ';
-  private static final char PASSED = '-';
   private static final char DESTINY = 'D';
 
   public void criaLabirinto(String filename) throws IOException {
@@ -37,130 +49,149 @@ public class Labirinto {
   }
 
   public static void setMaze(Object[] lines) {
-	  for (int i = 0; i < numberOfLines; i++) {
-		  Object line = lines[i];
+	  for (int row = 0; row < numberOfLines; row++) {
+		  Object line = lines[row];
 
-		  for (int j = 0; j < linesLength; j++) {
-			  char letter = line.toString().charAt(j);
-			  maze[i][j] = letter;
+		  for (int column = 0; column < linesLength; column++) {
+			  char letter = line.toString().charAt(column);
+			  maze[row][column] = letter;
+			  
+			  if (letter == PATH) {
+				  spacePositions.add(new Position(row, column));
+			  }
 		  }
 	  }
   }
   
   public static boolean percorreLabirinto() {
-	  return runInMaze(0, 0);
+	  spacePositions.get(0).setPassed(true);
+
+	  return runInMaze(0);
   }
   
-  private static boolean runInMaze(int line, int column) {
-	  Position nextPosition = getPath(line, column);
+  private static boolean runInMaze(int actualIndexPosition) {
+	  Position actualPosition = spacePositions.get(actualIndexPosition);
+	  List<Position> availablePaths = new ArrayList<>();
 	  
-	  if (hasReachedInDestiny(line, column)) {
+	  if (hasReachedInDestiny(actualIndexPosition)) {
 		  return true;
 	  }
 	  
-	  return runInMaze(nextPosition.line, nextPosition.column);
-  }
-  
-  private static Position getPath(int line, int column) {
-	  try {
-		  boolean isStucked = false;
-		  isStucked = checkIsStucked(line, column);
-		  
-		  if (!isStucked) {
-			  Position nextPosition = getNextPosition(line, column);
-			  
-			  maze[line][column] = PASSED;
+	  for (Map.Entry<String, Position> movement : movements.entrySet()) {
+		Position runForward = movement.getValue();
+		
+		for (int i = 0; i < spacePositions.size(); i++) {
+			int nextLine = actualPosition.line + runForward.line;
+			int nextColumn = actualPosition.column + runForward.column;
 
-			  return nextPosition;
-		  }
-		  
-		  return null;
-
-	  } catch (Error err){
-		  System.out.println(err);
-		  throw err;
+			Position possibleNextPosition = new Position(nextLine, nextColumn);
+			
+			boolean hasPath = checkHasPath(possibleNextPosition, spacePositions.get(i));
+			
+			if (hasPath && !spacePositions.get(i).getPassed()) {
+				availablePaths.add(spacePositions.get(i));
+			}
+		}
 	  }
-  }
-  
-  private static boolean checkIsStucked(int lineIndex, int columnIndex) throws ArrayIndexOutOfBoundsException {
-	  try {		  
-		  if (maze[lineIndex+1][columnIndex] == WALL
-				  && maze[lineIndex-1][columnIndex] == WALL
-				  && maze[lineIndex][columnIndex+1] == WALL
-				  && maze[lineIndex][columnIndex-1] == WALL
-				  ) {
-			  System.out.println("Não há caminho para a posição:");
+
+	  if (availablePaths.size() == 0 && indexTwoPaths != -1) {
+		  int nextPositionIndex = indexTwoPaths;
+		  indexTwoPaths = -1;
+		  return runInMaze(nextPositionIndex);
+	  }
+	  
+	  if (checkIsStucked(actualIndexPosition) && actualIndexPosition == indexTwoPaths) {
+		  return false;
+	  }
+
+	  if (availablePaths.size() > 1) {
+		  indexTwoPaths = actualIndexPosition;
+
+		  for (Position path : availablePaths) {
+			  path.setPassed(true);
 			  
-			  String lineStucked = String.format("Linha: %s", lineIndex);
-			  String columnStucked = String.format("Coluna: %s", columnIndex);
-			  
-			  System.out.println(lineStucked);
-			  System.out.println(columnStucked);
-			  return true;
+			  int nextPositionIndex = spacePositions.indexOf(path);
+			  return runInMaze(nextPositionIndex);
 		  }
-	  } catch (ArrayIndexOutOfBoundsException e) {
-		  System.out.println("Deu algum erro em uma posição");
+	  } else if (availablePaths.size() == 1) {		  
+		  Position path = availablePaths.get(0);
+		  path.setPassed(true);
+		  
+		  int nextPositionIndex = spacePositions.indexOf(path);
+		  return runInMaze(nextPositionIndex);
+	  }
+	  
+	  
+	  return false;
+  }
+
+  private static boolean checkIsStucked(int indexPosition) {
+	  Position position = spacePositions.get(indexPosition);
+
+	  int lineIndex = position.line;
+	  int columnIndex = position.column;
+	  
+	  int movementsAvailable = 0;
+	  
+	  for (Map.Entry<String, Position> movement : movements.entrySet()) {
+		Position movementPosition = movement.getValue();
+		int nextLine = lineIndex + movementPosition.line;
+		int nextColumn = columnIndex + movementPosition.column;
+		
+		if (!isValidMove(nextLine, nextColumn)) {
+			continue;
+		}
+
+		boolean isWall = maze[nextLine][nextColumn] == WALL;
+		boolean alreadyPassed = spacePositions.get(indexPosition).getPassed();
+
+		if (isWall || alreadyPassed) {
+			movementsAvailable += 1;
+		}
+	  }
+	  
+	  if (movementsAvailable == 4) {
+		  System.out.println("Não há caminho para a posição:");
+		  String lineStucked = String.format("Linha: %s", lineIndex);
+		  String columnStucked = String.format("Coluna: %s", columnIndex);
+		  
+		  System.out.println(lineStucked);
+		  System.out.println(columnStucked);
+		  return true;
 	  }
 	  
 	  return false;
   }
-  
-  private static Position getNextPosition(int line, int column) {
-	  Position nextPosition = null;
 
-	  if (isValidMove(line, column + 1)) {
-		  if (maze[line][column + 1] == PATH) {
-			  nextPosition = new Position(line, column + 1);
-			  return nextPosition;
-		  }
-	  }
-	  
-	  if (isValidMove(line + 1, column)) {
-		  if (maze[line + 1][column] == PATH) {
-			  nextPosition = new Position(line + 1, column);
-			  return nextPosition;
-		  }
-	  }
-	  
-	  if (isValidMove(line, column - 1)) {
-		  if (maze[line][column - 1] == PASSED) {
-			  nextPosition = new Position(line, column - 1);
-			  return nextPosition;
-		  }
-	  }
-	  
-	  if (isValidMove(line - 1, column)) {
-		  if (maze[line - 1][column] == PASSED) {
-			  nextPosition = new Position(line - 1, column);
-			  return nextPosition;
-		  }
-	  }
+  private static boolean hasReachedInDestiny(int indexPosition) {
+	  Position position = spacePositions.get(indexPosition);
 
-	  return nextPosition;
-  }
-  
-  private static boolean isValidMove(int line, int column) {
-	  return line >= 0 && line < maze.length && column >= 0 && column < maze[0].length;
-  }
-  
-  private static boolean hasReachedInDestiny(int line, int column) {
-	  if (isValidMove(line + 1, column)) {
-		  return maze[line + 1][column] == DESTINY;
-	  }
+	  int line = position.line;
+	  int column = position.column;
 	  
-	  if (isValidMove(line, column + 1)) {
-		  return maze[line][column + 1] == DESTINY;
-	  } 
-	  
-	  if (isValidMove(line, column - 1)) {
-		  return maze[line][column - 1] == DESTINY;
-	  }
-	  
-	  if (isValidMove(line - 1, column)) {
-		  return maze[line - 1][column] == DESTINY;
+	  for (Map.Entry<String, Position> movement : movements.entrySet()) {
+		Position movementPosition = movement.getValue();
+		int nextLine = line + movementPosition.line;
+		int nextColumn = column + movementPosition.column;
+		
+		if (!isValidMove(nextLine, nextColumn)) {
+			continue;
+		}
+
+		boolean isDestiny = maze[nextLine][nextColumn] == DESTINY;
+
+		if (isValidMove(nextLine, nextColumn) && isDestiny) {
+			return true;
+		}
 	  }
 	  
 	  return false;
+  }  
+  
+  private static boolean checkHasPath(Position nextPosition, Position spacePosition) {
+	  boolean isPositionsEquals = nextPosition.line == spacePosition.line && nextPosition.column == spacePosition.column;
+	  
+	  return isPositionsEquals;
   }
   
   public void getLabirinto() {
@@ -172,5 +203,8 @@ public class Labirinto {
 		  System.out.println();
 	  }
   }
-  
+
+  private static boolean isValidMove(int line, int column) {
+	  return line >= 0 && line < maze.length && column >= 0 && column < maze[0].length;
+  }
 }
