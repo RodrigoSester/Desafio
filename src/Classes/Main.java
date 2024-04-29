@@ -10,8 +10,13 @@ public class Main {
 	    
 	    try {
 	      labirinto.criaLabirinto(FILE_PATH);
-	
-	      System.out.println(Labirinto.percorreLabirinto());
+	      
+	      if (Labirinto.percorreLabirinto()) {
+	    	  System.out.println("Legal!! Consegui resolver o labirinto");
+	    	  return;
+	      }
+	      
+	      System.out.println("Que pena, não consegui resolver");
 	    } catch (IOException e) {
 	      e.printStackTrace();
 	    }
