@@ -5,8 +5,6 @@ import java.util.*;
 import java.util.stream.*;
 
 public class Labirinto {
-  public static boolean passedInAllPositions = false;
-
   public static char[][] maze;
 
   public static Map<String, Position> movements = Map.of(
