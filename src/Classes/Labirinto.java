@@ -15,10 +15,10 @@ public class Labirinto {
 		  );
   
   public static List<Position> spacePositions = new ArrayList<>();
+  public static List<Integer>indexesTwoPaths = new ArrayList<>();
   
   private static int numberOfLines;
   private static int linesLength;
-  public static int indexTwoPaths;
   
   private static final char WALL = 'X';
   private static final char PATH = ' ';
@@ -91,19 +91,23 @@ public class Labirinto {
 			}
 		}
 	  }
-
-	  if (availablePaths.size() == 0 && indexTwoPaths != -1) {
-		  int nextPositionIndex = indexTwoPaths;
-		  indexTwoPaths = -1;
-		  return runInMaze(nextPositionIndex);
-	  }
 	  
-	  if (checkIsStucked(actualIndexPosition) && actualIndexPosition == indexTwoPaths) {
-		  return false;
+	  int numOfTwoPaths = indexesTwoPaths.size();
+	  if (numOfTwoPaths > 0) {
+		  if (availablePaths.size() == 0) {
+			  int nextPositionIndex = indexesTwoPaths.get(numOfTwoPaths - 1);
+			  indexesTwoPaths.remove(numOfTwoPaths - 1);
+			  
+			  return runInMaze(nextPositionIndex);
+		  }
+		  
+		  if (checkIsStucked(actualIndexPosition) && actualIndexPosition == indexesTwoPaths.get(indexesTwoPaths.size() - 1)) {
+			  return false;
+		  }
 	  }
 
 	  if (availablePaths.size() > 1) {
-		  indexTwoPaths = actualIndexPosition;
+		  indexesTwoPaths.add(actualIndexPosition);
 
 		  for (Position path : availablePaths) {
 			  path.setPassed(true);
@@ -147,18 +151,8 @@ public class Labirinto {
 			movementsAvailable += 1;
 		}
 	  }
-	  
-	  if (movementsAvailable == 4) {
-		  System.out.println("Não há caminho para a posição:");
-		  String lineStucked = String.format("Linha: %s", lineIndex);
-		  String columnStucked = String.format("Coluna: %s", columnIndex);
-		  
-		  System.out.println(lineStucked);
-		  System.out.println(columnStucked);
-		  return true;
-	  }
-	  
-	  return false;
+
+	  return movementsAvailable == 4;
   }
 
   private static boolean hasReachedInDestiny(int indexPosition) {
