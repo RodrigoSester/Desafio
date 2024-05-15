@@ -11,6 +11,8 @@ public class PrincipalCandidatos {
 		System.out.println(numCandidates);
 		
 		candidatos = new Candidato[numCandidates];
+		
+		generateCandidates(numCandidates);
 	}
 	
 	private static void generateCandidates(int numCandidates) {
