@@ -26,6 +26,7 @@ public class Candidato {
 	public String toString() {
 		return "Candidato do partido: " + getPartido() + "\n"
 				+ "Nome: " + getNome() + "\n"
-				+ "Intenções de votos: " + getIntencoesVotos();
+				+ "Intenções de votos: " + getIntencoesVotos() + "\n"
+				+ "--------------------------------------";
 	}
 }
