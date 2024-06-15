@@ -6,11 +6,12 @@ import SecondStep.Classes.Comparator;
 public class PrincipalCandidatos {
 	private static Random random = new Random();
 	private static Candidato[] candidatos;
+	private final static Scanner INPUT = new Scanner(System.in);
 
 	private static InsertionSort<Candidato> insertionSort = new InsertionSort<>();
 
 	public static void main(String args[]) {
-		int numCandidates = random.nextInt(1, 10);
+		int numCandidates = random.nextInt(1, 100);
 		
 		candidatos = new Candidato[numCandidates];
 		
@@ -22,6 +23,20 @@ public class PrincipalCandidatos {
 
 		for (Candidato candidate : candidatos) {
 			System.out.println(candidate.toString());
+		}
+
+		System.out.println("Insira o nome que deseja fazer a busca: ");
+		String search = INPUT.nextLine();
+		System.out.println("Buscando por: " + search);
+		
+		int positionSearch = pesquisaBinariaCandidatos(candidatos, search);
+		
+		if (positionSearch == -1) {
+			System.out.println("Desculpe, não foi possível encontrar este candidato!");
+		} else {			
+			System.out.println("Legal!! Encontramos seu candidato!!");
+			System.out.println("Aqui estão os dados do candidato: ");
+			System.out.println(candidatos[positionSearch].toString());
 		}
 	}
 	
@@ -55,5 +70,24 @@ public class PrincipalCandidatos {
 	
 	private static void ordenaCandidatosPorPartido() {
 		insertionSort.sort(candidatos, (Candidato candidate1, Candidato candidate2) -> candidate1.getPartido().compareTo(candidate2.getPartido()));
+	}
+	
+	public static int pesquisaBinariaCandidatos(Candidato[] candidates, String nome) {
+		int inf = 0;
+		int sup = candidates.length;
+		
+		while (inf <= sup) {
+			int med = (inf + sup) / 2;
+
+			if (nome.equals(candidates[med].getNome())) {
+				return med;
+			} else if (nome.charAt(0) < candidates[med].getNome().charAt(0)) {
+				sup = med - 1;
+			} else {
+				inf = med + 1;
+			}
+		}
+
+		return -1;
 	}
 }
